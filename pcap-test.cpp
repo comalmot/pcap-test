@@ -29,9 +29,7 @@ void ret_mac(uint8_t mac[]) {
 	printf("\n");
 }
 
-void packet_read(const u_char* pkt) {
-	
-	
+void packet_read(const u_char* pkt, uint8_t size) {
 	struct libnet_ethernet_hdr* eth_hdr = (struct libnet_ethernet_hdr *)pkt;
 
 	pkt += sizeof(struct libnet_ethernet_hdr);
@@ -52,8 +50,17 @@ void packet_read(const u_char* pkt) {
 		printf("PROTOCOL : %d\n", ip_hdr->ip_p);
 
 		struct libnet_tcp_hdr* tcp_hdr = (struct libnet_tcp_hdr *)pkt;
-		printf("SRC PORT : %d", );
-		printf("DST PORT : %d", );
+		printf("SRC PORT : %d\n", tcp_hdr->th_sport);
+		printf("DST PORT : %d\n", tcp_hdr->th_dport);
+
+		pkt += sizeof(struct libnet_tcp_hdr);
+
+		printf("DATA : ");
+		for(int i = 0; i < size && i < 16; i++) {
+			printf("%02X ", *(pkt + i));
+		}
+
+		printf("\n\n\n\n");
 	}
 
 }	
@@ -75,20 +82,16 @@ int main(int argc, char* argv[]) {
 
     while(1) {
     	struct pcap_pkthdr* header;
-	const u_char* packet;
-	int protocol;
-	int res = pcap_next_ex(handle, &header, &packet);
-	if (res == 0) continue;
-	if (res == -1 || res == -2) {
-		printf("pcap_next_ex return %d(%s)\n", res, pcap_geterr(handle));
-		break;
-	}	
-        printf("Header info\n");
-	
-	packet_read(packet);
-	
-	printf("%u bytes captured\n", header->caplen);
-    }
+		const u_char* packet;
+		int protocol;
+		int res = pcap_next_ex(handle, &header, &packet);
+		if (res == 0) continue;
+		if (res == -1 || res == -2) {
+			printf("pcap_next_ex return %d(%s)\n", res, pcap_geterr(handle));
+			break;
+		}	
+		packet_read(packet, header->caplen);
+		}
 
     pcap_close(handle);
 
