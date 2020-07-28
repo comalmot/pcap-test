@@ -29,31 +29,34 @@ void ret_mac(uint8_t mac[]) {
 	printf("\n");
 }
 
-void ethhdr_info(const u_char* eth) {
-	struct libnet_ethernet_hdr* eth_hdr;
-        eth_hdr	= (struct libnet_ethernet_hdr *)eth;
-
-	printf("DEST MAC : "); 
-	ret_mac(eth_hdr->ether_dhost);
-	printf("SOURCE MAC : ");
-	ret_mac(eth_hdr->ether_shost);
-
+void packet_read(const u_char* pkt) {
 	
-	//printf("PROTOCOL : %d\n", ntohs(eth_hdr->ether_type));
-}
+	
+	struct libnet_ethernet_hdr* eth_hdr = (struct libnet_ethernet_hdr *)pkt;
 
-void iphdr_info(const u_char* eth) {
-	struct libnet_ipv4_hdr* ip_hdr = (struct libnet_ipv4_hdr *)eth;
-	//printf("IP VERSION : %d\n", ip_hdr->ip_v);
-	//printf("IP HDR_LEN : %d\n", ip_hdr->ip_hl);
-	//printf("IP TOS     : %d\n", ip_hdr->ip_tos);
-	//printf("IP TOTAL_LEN : %d\n", ip_hdr->ip_len);
-	//printf("TTL : %d\n", ip_hdr->ip_ttl);
-	//printf("PROTOCOL : %d\n", ip_hdr->ip_p);
-	printf("SRC IP : %s\n", inet_ntoa(ip_hdr->ip_src));
-	printf("DST IP : %s\n", inet_ntoa(ip_hdr->ip_dst));
-}
+	pkt += sizeof(struct libnet_ethernet_hdr);
 
+	struct libnet_ipv4_hdr* ip_hdr = (struct libnet_ipv4_hdr *)pkt;
+
+	if(ip_hdr->ip_p == 0x06) {
+
+		pkt += sizeof(struct libnet_ipv4_hdr);
+
+		printf("DEST MAC : "); 
+		ret_mac(eth_hdr->ether_dhost);
+		printf("SOURCE MAC : ");
+		ret_mac(eth_hdr->ether_shost);
+
+		printf("SRC IP : %s\n", inet_ntoa(ip_hdr->ip_src));
+		printf("DST IP : %s\n", inet_ntoa(ip_hdr->ip_dst));
+		printf("PROTOCOL : %d\n", ip_hdr->ip_p);
+
+		struct libnet_tcp_hdr* tcp_hdr = (struct libnet_tcp_hdr *)pkt;
+		printf("SRC PORT : %d", );
+		printf("DST PORT : %d", );
+	}
+
+}	
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         printf("Usage : %s <interface>\n", argv[0]);
@@ -73,6 +76,7 @@ int main(int argc, char* argv[]) {
     while(1) {
     	struct pcap_pkthdr* header;
 	const u_char* packet;
+	int protocol;
 	int res = pcap_next_ex(handle, &header, &packet);
 	if (res == 0) continue;
 	if (res == -1 || res == -2) {
@@ -80,14 +84,11 @@ int main(int argc, char* argv[]) {
 		break;
 	}	
         printf("Header info\n");
-	ethhdr_info(packet);
-	packet += sizeof(struct libnet_ethernet_hdr);
-	iphdr_info(packet);
+	
+	packet_read(packet);
+	
 	printf("%u bytes captured\n", header->caplen);
     }
-    struct libnet_ethernet_hdr A;
-    struct libnet_ipv4_hdr B;
-    struct libnet_tcp_hdr C;
 
     pcap_close(handle);
 
