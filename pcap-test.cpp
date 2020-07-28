@@ -2,14 +2,6 @@
 #include <pcap.h>
 #include <libnet.h>
 
-#pragma pack(push, 1)
-
-struct my_packet{
-	struct libnet_ethernet_hdr eth_header;
-	struct libnet_ipv4_hdr ip_header;
-	struct libnet_tcp_hdr tcp_header;
-}__attribute__((packed));
-
 /*  
     2020.07.26 (Sun)
     Author : Jin Gunseung (comalmot)
