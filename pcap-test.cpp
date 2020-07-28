@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
 			break;
 		}	
 		packet_read(packet, header->caplen);
-		}
-
+    }
+    
     pcap_close(handle);
 
     
